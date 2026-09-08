@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>情绪温度计 · 量化小仙女 — 点开有料</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei","PingFang SC",-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+:root{--ink:#eaf2ff;--mut:#9fb6d2;--dim:#64809f;--gold:#ffd76a;--card:rgba(125,185,255,.06);--bd:rgba(125,185,255,.16);--liftG:-52px;--liftF:-50px}
+body{min-height:100vh;background:radial-gradient(1000px 720px at 82% -12%,#13537f 0%,transparent 56%),radial-gradient(820px 700px at -8% 118%,#0b4033 0%,transparent 52%),linear-gradient(165deg,#050b18,#0a1830 58%,#071121);color:var(--ink);display:flex;justify-content:center;padding:20px 16px 72px}
+.wrap{width:min(470px,100%)}
+.hint{text-align:right;font-size:10.5px;color:#5fd0a8;margin:0 6px 8px;letter-spacing:.3px}
+.head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.brand{font-weight:800;font-size:19px}.brand i{font-style:normal;color:#4fc3f7}.brand small{font-size:11px;font-weight:400;color:var(--mut);margin-left:4px}
+.go{font-size:10.5px;color:var(--mut);border:1px solid var(--bd);border-radius:20px;padding:3px 8px}.go:after{content:' ›'}
+.date{border-top:1px dashed rgba(125,185,255,.2);border-bottom:1px dashed rgba(125,185,255,.12);margin-top:9px;padding:9px 2px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.dv{font-size:13.5px;color:var(--gold);font-weight:700}.dc{font-size:11px;color:#4fc3f7}
+.sub{font-size:10.5px;color:var(--mut);margin:7px 2px 13px;letter-spacing:.2px}
+.card{background:linear-gradient(170deg,#0e2139,#0a1728);border:1px solid var(--bd);border-radius:26px;padding:10px 18px 20px;box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05)}
+.gauge{position:relative;cursor:pointer;user-select:none}
+canvas{display:block;width:100%}
+.read{position:absolute;left:0;right:0;top:64%;text-align:center;pointer-events:none}
+.read .t{font-size:56px;font-weight:900;line-height:.9;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.read .t em{font-style:normal;font-size:19px;color:var(--gold);vertical-align:top}
+.read .s{font-size:19px;font-weight:800;margin-top:2px}
+.hot{color:#ffd76a}
+.zone{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:6px}
+.z{display:flex;align-items:center;gap:7px;font-size:11px;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(125,185,255,.1);border-radius:12px;padding:7px 9px}
+.z .dot{width:13px;height:13px;border-radius:5px;flex:0 0 auto}.z b{font-weight:700;color:#fff}.z small{color:var(--dim);margin-left:auto}
+.label-row{display:flex;gap:10px;margin-top:16px;transform:translateY(var(--liftF))} /* 抬升L2: 动量及以下跟随上移(只增不减) */
+.box{flex:1;cursor:pointer;user-select:none;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:15px 6px 11px;text-align:center;transition:.15s;position:relative}
+.box:active{transform:scale(.96)}.box .k{font-size:11px;color:var(--dim)}.box .v{font-size:18px;font-weight:900;margin-top:2px}
+.tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:9px;color:#4fc3f7;background:#0a1728;border:1px solid var(--bd);border-radius:10px;padding:1px 8px;white-space:nowrap}
+.gate{display:flex;align-items:center;gap:10px;margin-top:13px;cursor:pointer;user-select:none;background:var(--card);border:1px dashed var(--bd);border-radius:16px;padding:12px 14px;font-size:12.5px;color:#e2efff;line-height:1.55;transform:translateY(var(--liftF))} /* 抬升L2 */
+.badge{font-weight:800;font-size:12px;color:#081422;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.on{background:#2ecc71}.half{background:#ffd76a}.off{background:#ff5252}
+.ad{margin-top:13px;background:linear-gradient(90deg,rgba(255,214,120,.18),rgba(255,214,120,.05));border:1px solid rgba(255,214,120,.35);border-radius:16px;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.ad .l{font-size:13px;color:#ffe6a6;font-weight:700}.ad .b{font-size:11px;border:1px solid rgba(255,214,120,.5);color:#ffd76a;border-radius:20px;padding:4px 10px;flex:0 0 auto}
+.range{display:flex;align-items:center;gap:10px;margin-top:13px;cursor:pointer}.range em{font-style:normal;font-size:10px;color:var(--dim);margin-right:2px}.rngv{color:var(--gold);font-weight:800;width:42px;text-align:center;font-size:13px}
+input[type=range]{flex:1;-webkit-appearance:none;height:7px;border-radius:6px;outline:none;background:linear-gradient(90deg,#5aa8e6 0 16.6%,#43c9b0 16.6% 33.3%,#8fd36b 33.3% 50%,#ffcd5a 50% 66.6%,#ff9a3c 66.6% 83.3%,#ff5252 83.3% 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:21px;height:21px;border-radius:50%;background:#fff;border:6px solid #ffd76a;cursor:pointer;box-shadow:0 2px 9px rgba(0,0,0,.5)}
+.src{margin-top:13px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:10px;color:var(--dim);line-height:1.9}
+.src u{text-decoration:none;border-bottom:1px dotted var(--dim);cursor:pointer}
+.mask{position:fixed;inset:0;background:rgba(2,8,16,.62);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+.mask.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;height:min(80vh,720px);background:linear-gradient(180deg,#10243a,#0a1728);border:1px solid var(--bd);border-bottom:none;border-radius:22px 22px 0 0;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:50;display:flex;flex-direction:column;box-shadow:0 -18px 60px rgba(0,0,0,.65)}
+.sheet.open{transform:translateY(0)}
+.sb{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid rgba(125,185,255,.14);flex:0 0 auto}
+.sb .l .tt{font-size:16px;font-weight:800}.sb .l .p{font-size:11px;color:#5fd0a8;font-weight:700;margin-top:1px}
+.sb .x{cursor:pointer;color:var(--dim);font-size:16px;padding:4px 10px;border-radius:9px;background:rgba(255,255,255,.05)}
+.sbody{overflow:auto;padding:15px 17px 36px;font-size:13px;color:#dbe8fa;line-height:1.85}
+.sbody h4{font-size:12.5px;color:var(--gold);margin:16px 0 6px;font-weight:800}.sbody h4:first-child{margin-top:0}
+.big3{display:flex;gap:9px;margin-top:5px}.b3{flex:1;text-align:center;background:var(--card);border:1px solid var(--bd);border-radius:13px;padding:10px 2px}.b3 .n{font-size:20px;font-weight:900}.b3 .l2{font-size:10px;color:var(--dim)}
+table{width:100%;border-collapse:collapse;margin:7px 0;font-size:12.5px}th,td{border-bottom:1px dashed rgba(125,185,255,.12);padding:6px 5px;text-align:left;vertical-align:top}th{color:var(--dim);font-weight:700;font-size:11px}
+.hi{color:#ff5252;font-weight:800}.gn{color:#2ecc71;font-weight:800}.gd{color:#ffd76a;font-weight:800}
+.bar{background:#0c1d33;border-radius:9px;height:9px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%}
+ul{margin:3px 0;padding-left:20px}
+.ck{font-size:10.5px;color:var(--dim);margin-top:13px;border-top:1px dashed rgba(125,185,255,.14);padding-top:8px}
+.momentum{margin-top:14px;transform:translateY(var(--liftF));background:var(--card);border:1px solid rgba(255,214,106,.28);border-radius:18px;padding:11px 14px 13px;cursor:pointer;user-select:none} /* 抬升L2 */
+.momtop{display:flex;align-items:center;gap:13px}
+.momcanvas{width:122px;height:74px;flex:0 0 auto}
+.momcanvas canvas{width:100%;height:100%}
+.mominfo{flex:1;min-width:0}
+.momlab{font-size:11.5px;color:var(--mut);letter-spacing:.3px}
+.momval{font-size:24px;font-weight:900;line-height:1.1;margin-top:3px}
+.momact{font-size:11.5px;color:#d7e7fb;margin-top:5px;line-height:1.5}
+.momstrip{display:flex;gap:8px;margin-top:10px}
+.momchip{flex:1;text-align:center;border:1px solid var(--bd);border-radius:12px;padding:7px 3px;font-size:11px;color:var(--mut);background:rgba(5,15,28,.35);line-height:1.5}
+.momchip b{display:block;font-size:13.5px;color:#cfe2f7;font-weight:800}
+.momchip.cur{background:rgba(255,214,106,.12);border-color:#ffd76a;color:#fff}
+.momchip.cur b{color:#ffd76a}
+.momchip small{font-size:9.5px;opacity:.85}
+
+/* ============ 闭环系统总览(LOOP) · 只增不减新增块 ============
+   把页面各部位串成"温度→动量→梯队→守住"的闭环; 4节各显示今日读数,
+   第④守(卖出纪律)/能量四态当前无逐日数据字段 → 以理论档文字呈现, 不造假。 */
+.loop{margin-top:13px;background:linear-gradient(150deg,rgba(79,195,247,.09),rgba(255,215,106,.04) 55%,rgba(46,204,113,.06));border:1px solid rgba(79,195,247,.28);border-radius:18px;padding:12px 13px 13px;cursor:pointer;user-select:none}
+.loop .lt{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:#bfe7ff;letter-spacing:.3px}
+.loop .lt i{font-style:normal;color:#5fd0a8;font-size:10.5px;font-weight:700}
+.loop .ring{display:flex;align-items:stretch;gap:5px;margin-top:10px}
+.ln{flex:1;text-align:center;background:rgba(5,15,28,.4);border:1px solid rgba(125,185,255,.14);border-radius:13px;padding:8px 3px 7px;position:relative}
+.ln .a{font-size:10px;color:#8fd36b;letter-spacing:.5px;font-weight:800}
+.ln .b{font-size:14.5px;font-weight:900;color:#fff;margin-top:3px;line-height:1.2}
+.ln .c{font-size:9px;color:var(--dim);margin-top:2px;line-height:1.4;min-height:12px}
+.ln.th .b{color:#ffd76a;font-weight:800;font-size:12.5px}
+.ln.th .c{color:#ffd76a;opacity:.8}
+.loop .leg{font-size:9px;color:var(--dim);margin-top:8px;letter-spacing:.2px;line-height:1.5}
+.loop .go{float:right;font-size:10px;color:#4fc3f7;border:1px solid rgba(79,195,247,.35);border-radius:16px;padding:2px 9px;margin-top:2px}
+.loop .go:after{content:' ›'}
+/* ---- 近30日走势趋势图 ---- */
+.trwrap{background:#0b1d34;border:1px solid var(--bd);border-radius:16px;padding:12px 12px 10px;margin:4px 0 10px}
+.trwrap canvas{display:block;width:100%;height:auto}
+.tagn{font-size:10px;color:var(--dim);text-align:center;margin-top:6px;letter-spacing:.2px}
+
+/* ============ 布局抬升组(LIFT) ============
+   L1 主表盘组(#g + 读数浮层 + 六区图例): translateY(---liftG) 原 -52
+   L2 动量及以下(.momentum/.label-row/.gate): translateY(var(--liftF)) 原 -50
+   纯位移归拢, 像素零变化; 元素未删改, 遵循只增不减。 */
+#g{transform:translateY(var(--liftG))}
+.gauge .read{transform:translateY(var(--liftG))}
+#zk{transform:translateY(var(--liftG))}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hint">· 每个部位都能点 · 点开看数据与说明 ·</div>
+<div class="head" data-k="about"><div class="brand">情绪温度计 <i>·</i><small>量化小仙女</small></div><div class="go">测温口径</div></div>
+<div class="date" data-k="history"><div class="dv"><span id="dateTxt">--</span> · 收盘</div><div class="dc">近30日走势 ›</div></div>
+<div class="sub">收盘情绪动量 · 温度=赚钱效应(客观统计) · 涨红 / 跌绿</div>
+<div class="card">
+  <div class="gauge" data-k="temp"><canvas id="g" width="460" height="400"></canvas>
+    <div class="read"><div class="t"><span id="big">--</span><em>°</em></div><div class="s" id="state">—</div></div>
+  </div>
+  <div class="zone" id="zk"></div>
+  <div class="momentum" data-k="mom" style="display:none">
+    <div class="momtop"><div class="momcanvas"><canvas id="mc" width="122" height="74"></canvas></div>
+      <div class="mominfo"><div class="momlab">情绪动量 · 状态与力度</div><div class="momval" id="momV">—</div><div class="momact" id="momA"></div></div>
+    </div>
+    <div class="momstrip" id="momS"></div>
+  </div>
+  <div class="label-row" id="row3"></div>
+  <div class="gate" id="gateRow" data-k="gate"></div>
+  <div class="loop" data-k="loop">
+    <div class="lt">情绪闭环 · 温度→动量→梯队→守住 <small style="font-weight:400;font-size:9px;color:#9fb6d2">(闭环系统理论·今日走到哪)</small></div>
+    <div class="ring" id="loopRing"></div>
+    <div class="leg">四力闭环：温度定方向(何时买)，动量定力度(买多重)，梯队定标的(买什么)，卖出纪律守住利润(何时走)。点开看全链与第④守细则。</div>
+    <div class="go">闭环详解</div>
+  </div>
+  <div class="ad" data-k="tomorrow"><div class="l">明日怎么看 · 观察点</div><div class="b">点开 ›</div></div>
+  <div class="range" data-k="sim"><em>拖动模拟温度</em><input type="range" id="sl" min="0" max="100" value="58"><div class="rngv" id="live">58°</div></div>
+  <div class="src" id="srcRow"></div>
+</div>
+</div>
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet"><div class="sb"><div class="l"><div class="tt" id="st">—</div><div class="p" id="sp"></div></div><div class="x" id="sx">✕</div></div><div class="sbody" id="sb"></div></div>
+<script>
+(function(){
+var TODAY={temp:58,zt:73,zb:37,zr:33.6,xy:3.0,xs:65,xz:19,lb:4,date:'2026-09-08',
+ em:'均衡 ×0.8',tit:'回暖58° · 高标收敛',want:'回暖非反转',gateTxt:'半开 · 可试探',
+ sig:'赚钱效应为正(65%昨日涨停今收涨、19家再涨停)，但炸板率33.6%近乎翻倍——量升、质降',
+ watch:['赚钱效应能否站稳（决定半开能否转开闸）','4板梯队(爱仕达/百大/亚盛)能否走出5板定高度','炸板率能否回落，否则谨防高开诱多'],
+ ladder:[['4板','爱仕达 · 百大集团 · 亚盛集团'],['3板','海欣食品 · 中国出版'],['2板','3家'],['首板','36家（连板池偏薄）']]};
+var ZONE=[[20,'冰点','#5aa8e6','极冷 → 空仓防守','跌停潮、赚钱效应极差，接力几乎全断，只防守'],
+[40,'低迷','#43c9b0','偏冷 → 观望为主','效应弱转无持续，反弹多一日游，别急着抄'],
+[55,'谨慎','#8fd36b','分歧 → 轻仓试探','效应刚转好方向未明，先小仓试错'],
+[70,'回暖','#ffcd5a','转好 → 可试探','效应站稳、接续改善，是多数行情的可参与区'],
+[85,'亢奋','#ff9a3c','强 → 参与且控回撤','效应强情绪高，防高开诱多与高位退潮'],
+[100,'过热','#ff5252','极致 → 只卖不追','过热=反向风险，冲高无量易高开低走，落袋优先']];
+var zz=function(t){for(var i=0;i<ZONE.length;i++)if(t<=ZONE[i][0])return ZONE[i];return ZONE[ZONE.length-1]};
+var fmt=function(n){var s=(Math.round(n*10)/10).toFixed(1);return (n>=0?'+':'')+s+'%'};
+var cv=document.getElementById('g'),x=cv.getContext('2d'),W=cv.width,H=cv.height,CX=W/2,CY=H*.58,ST=120,AR=300,Ro=W*.31,Ri=W*.20,Rn=W*.34;
+var an=function(f){return Math.PI*(ST-f*AR)/180+Math.PI+Math.PI/12},P=function(f,r){var a=an(f);return{x:CX+r*Math.cos(a),y:CY-r*Math.sin(a)}};
+var hx=function(c){c=c.replace('#','');return[parseInt(c.substr(0,2),16),parseInt(c.substr(2,2),16),parseInt(c.substr(4,2),16)]};
+var mx=function(a,b,k){return[Math.round(a[0]+(b[0]-a[0])*k),Math.round(a[1]+(b[1]-a[1])*k),Math.round(a[2]+(b[2]-a[2])*k)]};
+function draw(v){x.clearRect(0,0,W,H);x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=16;x.fillStyle='#0a1a2f';x.beginPath();x.arc(CX,CY,Rn+30,0,7);x.fill();x.shadowBlur=0;
+ // 每区按0-100逐小片画成四边扇块(fill)，显式cos/sin顶点——彻底规避 arc 弧向歧义，色带与刻度严格对齐
+ var zc=function(t){for(var q=0;q<ZONE.length;q++)if(t<=ZONE[q][0])return ZONE[q][2];return ZONE[ZONE.length-1][2]};
+ var SPC=0.5; // 每片覆盖 f 步长
+ for(var ff=0;ff<100-SPC/2;ff+=SPC){var t0=ff,t1=Math.min(100,ff+SPC);
+  var q0=an(t0/100),q1=an(t1/100);
+  x.beginPath();
+  x.moveTo(CX+Ro*Math.cos(q0),CY-Ro*Math.sin(q0));
+  x.lineTo(CX+Ro*Math.cos(q1),CY-Ro*Math.sin(q1));
+  x.lineTo(CX+Ri*Math.cos(q1),CY-Ri*Math.sin(q1));
+  x.lineTo(CX+Ri*Math.cos(q0),CY-Ri*Math.sin(q0));
+  x.closePath();x.fillStyle=zc((t0+t1)/2);x.fill();}
+ x.lineWidth=1;x.strokeStyle='rgba(0,0,0,.20)';x.beginPath();x.arc(CX,CY,Ro,0,7);x.arc(CX,CY,Ri,0,7,true);x.stroke();
+ x.lineWidth=1.5;x.strokeStyle='rgba(255,255,255,.13)';x.beginPath();x.arc(CX,CY,(Ro+Ri)/2,0,7);x.stroke();
+ x.lineWidth=2;x.strokeStyle='rgba(255,255,255,.8)';for(var n=0;n<=100;n+=10){var a=P(n/100,Ro+2),b=P(n/100,Ro+12);x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();}
+ x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.font='700 14px "Microsoft YaHei"';
+ for(var n=0;n<=100;n+=10){var p=P(n/100,Rn),td=ST-n*AR/100;x.save();x.translate(p.x-2*Math.cos(td*Math.PI/180),p.y-2*Math.sin(td*Math.PI/180));x.rotate((td+90)*Math.PI/180);x.fillText(''+n,0,0);x.restore();}
+ var ti=P(v/100,Ri-5),ta=P(v/100,-20);x.lineCap='round';x.strokeStyle='rgba(255,255,255,.18)';x.lineWidth=5;x.beginPath();x.moveTo(ta.x,ta.y);x.lineTo(CX,CY);x.stroke();
+ x.strokeStyle='#f6f8fc';x.lineWidth=5;x.shadowColor='rgba(255,255,255,.5)';x.shadowBlur=9;x.beginPath();x.moveTo(CX,CY);x.lineTo(ti.x,ti.y);x.stroke();x.shadowBlur=0;
+ x.fillStyle='#fff';x.beginPath();x.arc(CX,CY,11,0,7);x.fill();x.fillStyle='#0b1422';x.beginPath();x.arc(CX,CY,5,0,7);x.fill();}
+document.getElementById('zk').innerHTML=ZONE.map(function(z,i){return '<div class="z" data-k="zone'+i+'"><i class="dot" style="background:'+z[2]+'"></i><b>'+z[1]+'</b><small>&lt;'+z[0]+'</small></div>'}).join('');
+var B3=[['zt','涨停家数',TODAY.zt+'家','#ff5252','炸板率 '+TODAY.zr+'% ›'],['xy','赚钱效应',fmt(TODAY.xy),'#ff5252','昨板今收涨 '+TODAY.xs+'% ›'],['lb','最高连板',TODAY.lb+'板','#ffd76a','看梯队 ›']];
+document.getElementById('row3').innerHTML=B3.map(function(b){return '<div class="box" data-k="'+b[0]+'"><span class="tag">'+b[4]+'</span><div class="k">'+b[1]+'</div><div class="v" style="color:'+b[3]+'">'+b[2]+'</div></div>'}).join('');
+function buildCards(T){
+  var B3=[['zt','涨停家数',(T.ztTxt||T.zt+'家'),'#ff5252','炸板率 '+T.zr+'% ›'],['xy','赚钱效应',(T.xyTxt||fmt(T.xy)),'#ff5252','昨板今收涨 '+T.xs+'% ›'],['lb','最高连板',(T.lbTxt||T.lb+'板'),'#ffd76a','看梯队 ›']];
+  document.getElementById('row3').innerHTML=B3.map(function(b){return '<div class="box" data-k="'+b[0]+'"><span class="tag">'+b[4]+'</span><div class="k">'+b[1]+'</div><div class="v" style="color:'+b[3]+'">'+b[2]+'</div></div>'}).join('');
+}
+function buildGate(T){
+  var w0=zz(T.temp);
+  document.getElementById('gateRow').innerHTML='今日 · 情绪闸门：<span class="badge '+(T.gateCls||'half')+'">'+(T.gateTxt||'半开 · 可试探')+'</span><span>温度'+T.temp+'°('+w0[1]+')＋赚钱效应为正 → '+T.want+'</span>';
+}
+function buildAll(T){buildCards(T);buildGate(T);try{buildLoop()}catch(e){}var z=zz(T.temp);document.getElementById('big').textContent=T.temp;document.getElementById('state').textContent=z[1]+' · 接续转好';document.getElementById('state').style.color=z[2];document.getElementById('dateTxt').textContent=T.date;sl.value=T.temp;draw(T.temp);try{drawMom()}catch(e){}}
+document.getElementById('srcRow').innerHTML='<u data-k="words">名词课堂</u><u data-k="about">免责声明</u><span>|</span><span>来源：市场公开收盘统计</span>';
+document.getElementById('big').textContent=TODAY.temp;document.getElementById('dateTxt').textContent=TODAY.date;
+var st0=zz(TODAY.temp);document.getElementById('state').textContent=st0[1]+' · 接续转好';document.getElementById('state').style.color=st0[2];
+try{drawMom()}catch(e){}
+var sl=document.getElementById('sl'),live=document.getElementById('live');sl.value=TODAY.temp;sl.addEventListener('input',function(){var v=+sl.value;draw(v);var z=zz(v);document.getElementById('state').textContent=z[1];document.getElementById('state').style.color=z[2];live.textContent=v+'°';});
+function applyApp(d){
+  /* d = app_data.json : 每日收盘自动判定(温度/档类/赚效/闸门/梯队/走势) */
+  if(!d||d.temp==null)return false;
+  var tp=d.temp;
+  if(tp.val!=null){TODAY.temp=tp.val;}
+  else if(tp>=0){TODAY.temp=tp;}
+  var cd=d.cards||{},ef=d.effect||{},tr=d.trend,co=d.corridor||{};
+  if(cd.zt!=null)TODAY.zt=cd.zt;
+  if(cd.zb_rate!=null)TODAY.zr=String(cd.zb_rate).replace('%','');
+  if(tp.gate!=null){var _g=String(tp.gate);TODAY.gateTxt=_g.replace('✓','· 可参与').replace('chk','半开');TODAY.gateCls=(_g.indexOf('开闸')===0)?'on':(_g.indexOf('空仓')===0?'off':'half');}
+  if(ef.avg!=null){var p=parseFloat(String(ef.avg).replace(/[^0-9.\-]/g,''));if(!isFinite(p))p=0;TODAY.xy=p;}
+  if(ef.up_pct!=null)TODAY.xs=ef.up_pct;
+  if(cd.top!=null){var m=/^(\d+)\s*板/.exec(String(cd.top));if(m)TODAY.lb=+m[1];}
+  if(cd.top_note)TODAY.lbNote=cd.top_note;
+  if(tp.em)TODAY.em=tp.em;
+  /* 明日倾向串: 用闸门分类 */
+  var cls=String(tp.cls||'warm');
+  if(co.concl)TODAY.want=co.concl;
+  TODAY.date=String(d.meta&&d.meta.today||TODAY.date).replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3');
+  if(tr&&tr.length>TR.length)setTrend(tr);
+  buildAll(TODAY); renderTrend && renderTrend();
+  return true;
+}
+fetch('app_data.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(d){if(!applyApp(d))return fetch('mood.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(m){if(m.temp!=null){TODAY.temp=m.temp;if(m.zhangting!=null)TODAY.zt=m.zhangting;if(m.xiaoying!=null){var p=parseFloat(String(m.xiaoying).replace(/[^0-9.\-]/g,''));if(!isNaN(p))TODAY.xy=p}if(m.lianban!=null)TODAY.lb=m.lianban;if(m.date)TODAY.date=m.date;sync()}}).catch(function(){buildAll(TODAY);renderTrend&&renderTrend()})}).catch(function(){fetch('mood.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(m){if(m.temp!=null){TODAY.temp=m.temp;if(m.zhangting!=null)TODAY.zt=m.zhangting;if(m.xiaoying!=null){var p=parseFloat(String(m.xiaoying).replace(/[^0-9.\-]/g,''));if(!isNaN(p))TODAY.xy=p}if(m.lianban!=null)TODAY.lb=m.lianban;if(m.date)TODAY.date=m.date;buildAll(TODAY)}}).catch(function(){buildAll(TODAY);renderTrend&&renderTrend()})});
+fetch('mood_history.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(h){if(h&&h.length){setTrend(h);renderTrend&&renderTrend();}}).catch(function(){});
+function sync(){buildAll(TODAY);}
+var S={
+about:'<h4>这是什么</h4>每天收盘后，把全市场短线情绪量化成一格 <b class="hot">0-100 的情绪温度</b>，配赚钱效应 / 涨停 / 连板三个数，看懂今天热在哪、要不要参与。<h4>为什么叫温度，不是涨幅</h4>温度度量的是 <b class="hot">赚钱效应</b>——昨天涨停的票今天还能不能带走利润。它比单纯涨停家数更能说明情绪有没有续力。<h4>判据口径（忠于 01《情绪门控》理论）</h4><table><tr><th>赚钱效应</th><th>温度</th><th>情绪</th></tr><tr><td>&gt;6%</td><td>88</td><td class="gd">亢奋</td></tr><tr><td>4–6%</td><td>76</td><td class="gd">亢奋</td></tr><tr><td>2–4%</td><td>58</td><td class="gd">回暖</td></tr><tr><td>0–2%</td><td>42</td><td>偏冷</td></tr><tr><td>≤0%</td><td>22</td><td>冷清</td></tr></table><div class="ck">温度只依赚钱效应，单源可审计。本页再把 0-100 细分成 6 个情绪区，落哪区显示哪种颜色与档名。</div>',
+history:'<h4>近30日情绪走势 · 每日收盘自动生成</h4><div class="trwrap"><canvas id="tc" width="380" height="196"></canvas><div class="tagn"><b class="hot">今日 · 58° 回暖</b>&nbsp; 谷21(08/28)&nbsp; 峰86(09/03)</div></div><p>把每天的温度连成线，看今天处在情绪周期的<b class="hot">冷却段</b>还是<b class="gd">回暖段</b>——自低谷向上修复=参与窗口打开；自高位向下=防退潮、降仓位。</p><h4>读图</h4><ul><li><b>线往上走 + 温度进 55-70 回暖区</b>：赚钱效应接续转好，可小仓试探。</li><li><b>线冲高到 85+ 过热区</b>：不是加仓信号，是「只卖不追、控回撤」提示。</li><li><b>线趴在 40 以下</b>：多数时间收手等回暖，别接飞刀。</li></ul><h4>数据自积累</h4><p>每交易日收盘后自动把当日温度滚进序列，走势图随天数变完整；早期以少数实点起步，不造假补齐。</p><div class="ck">历史温度=每日收盘客观统计，图随积累变长，非预测线。</div>',
+temp:'<h4>今日 58° · 落在「回暖」区</h4><div class="big3"><div class="b3"><div class="n" style="color:#ffcd5a">58°</div><div class="l2">今日温度</div></div><div class="b3"><div class="n" style="color:#ffcd5a">回暖</div><div class="l2">情绪区</div></div><div class="b3"><div class="n" style="color:#ffd76a">半开</div><div class="l2">情绪闸</div></div></div><h4>一句话解读</h4>'+TODAY.sig+'。<h4>六档情绪界</h4><table><tr><th>温度</th><th>档位</th><th>操作语</th></tr>'+ZZT()+'</table><h4>为什么今日判「'+zz(TODAY.temp)[1]+'」</h4>赚钱效应为正说明情绪没死，但温度未到 70+ 强区、炸板率又偏高 → <b>'+TODAY.want+'</b>，非反转确认。<div class="ck">此页为市场状态描述，非买卖指令。</div>',
+zt:'<h4>涨停 73 家 vs 炸板 37 家</h4><div class="big3"><div class="b3"><div class="n" style="color:#ff5252">73</div><div class="l2">涨停家数</div></div><div class="b3"><div class="n" style="color:#ffd76a">33.6%</div><div class="l2">炸板率(偏高)</div></div><div class="b3"><div class="n">36</div><div class="l2">首板家数</div></div></div><h4>读法：量 vs 质</h4>涨停 <b class="hi">73 家不算少</b>，但炸板率 <b class="gd">33.6%</b> 是近日(≈17%)的近两倍——封上去又开板的变多 = 分歧加大、封板质量下降：量升、质降。<h4>结构拆解</h4><table><tr><th>板位</th><th>个股</th></tr>'+LAD()+'</table><div class="ck">炸板率高是情绪转弱的前兆信号；重点盯能否回落到 20% 以下。</div>',
+xy:'<h4>赚钱效应 +3.0%</h4><div class="big3"><div class="b3"><div class="n" style="color:#ff5252">+3.0%</div><div class="l2">效应强度</div></div><div class="b3"><div class="n" style="color:#ff5252">65%</div><div class="l2">昨涨停今收涨</div></div><div class="b3"><div class="n" style="color:#ffd76a">19家</div><div class="l2">再涨停(续力)</div></div></div><h4>怎么算（理论核心）</h4>统计<b>昨日涨停股</b>今日加权表现（收涨占比＋续板）。<b>赚钱效应 &gt; 0 是情绪闸能否打开的第一前提</b>——涨停家数再多，若效应为负（隔日全埋）＝只是虚火。<h4>今日读数</h4>效应 <b>+3.0%</b>、昨日涨停中 <b>65% 今日收涨</b>、<b>19 家再度涨停</b>（有续力）——这是判「回暖 · 可试探」而非「关闸空仓」的根因。<div class="ck">纯统计描述，不构成投资建议。</div>',
+lb:'<h4>最高连板 = 4 板</h4><div class="big3"><div class="b3"><div class="n" style="color:#ffd76a">4板</div><div class="l2">今日高度</div></div><div class="b3"><div class="n">8</div><div class="l2">连板家数</div></div></div><h4>梯队（谁在往上走）</h4><table><tr><th>板位</th><th>个股</th></tr>'+LAD()+'</table><h4>怎么解读高度</h4>连板高度 = 资金愿不愿接力。4 板不高不低：比前一日（6 板）回落说明高标今断，但 3 板 海欣 / 中国出版 仍在 → 情绪没死，只是<span class="gd">高度收敛、往低位换手</span>。<div class="ck">高度不足期最忌追缩量末日板。看 4 板三只能否走出一只 5 板定方向。</div>',
+gate:'<h4>情绪闸门：半开 · 可试探（回暖档）</h4>温度给"挡位"，但<b>要不要放大仓</b>要再过一道「情绪闸门」——用赚钱效应＋温度共同决定，避免虚火期满仓。<h4>闸门档位速查</h4><table><tr><th>赚钱效应</th><th>动作</th></tr><tr><td>&lt;0%</td><td class="hi">关闸 · 空仓 / 防守</td></tr><tr><td>0–4%</td><td class="gd">半开 → 试探</td></tr><tr><td>4–7%</td><td class="gd">开闸 · 可参与</td></tr><tr><td>&gt;7%</td><td class="hot">开闸 · 防退潮 · 控回撤</td></tr></table><h4>今日：半开 · 可试探</h4>赚钱效应为正（+3.0%）满足开闸前提，但温度 58° 未到 70+ 强区、炸板率又偏高 → 开一半、可试探不可梭。'+TODAY.sig+'。<div class="ck">闸门是纪律工具不是预测工具，空仓 / 满仓都看它，不凭感觉上头。</div>',
+tomorrow:'<h4>一句话倾向：回暖非反转</h4>温和承接延续则回稳；若高开冲高量跟不上、炸板率再升，谨防退潮式高开低走。<h4>三个观察点（非预测，是看盘钩子）</h4><ul>'+WATCH()+'</ul><div class="ck">基于今日客观统计的状态推演，非买卖建议；明日以收盘新数据为准。</div>',
+sim:'<h4>拖动上方滑块，模拟不同温度</h4>温度一变，情绪区、颜色、闸门判定跟着动，直观看到：<ul><li>≈ &lt; 55° → 谨慎 / 低迷，闸门多半关着</li><li>55–70° → 回暖，赚效为正时可试探</li><li>70°+ → 亢奋起，配强赚效 = 开闸；但 85°+ 过热 = 只卖不追</li></ul><div class="ck">拖动仅作教学演示；真实温度每日收盘自动更新，不手动改。</div>',
+words:'<h4>名词课堂 · 一句人话</h4><table><tr><th>名词</th><th>释义</th></tr><tr><td><b>情绪温度</b></td><td>把短线赚钱气氛量化成一格 0-100 读数</td></tr><tr><td><b>赚钱效应</b></td><td>昨日涨停的票今日是否还带得走利润（&gt;0 才有续力）</td></tr><tr><td><b>炸板率</b></td><td>盘中冲到涨停又开板的占比；越高 = 分歧越大、质量越差</td></tr><tr><td><b>连板高度</b></td><td>最高几板，代表资金愿不愿接力、上方有无空间</td></tr><tr><td><b>情绪闸门</b></td><td>赚效 + 温度共同决定的“要不要放大仓”开关</td></tr></table>'
+};
+for(var i=0;i<ZONE.length;i++){var _z=ZONE[i];S['zone'+i]='<h4 style="color:'+_z[2]+'">'+_z[1]+'区（≤'+_z[0]+'°）</h4><p>'+_z[4]+'</p><h4>操作语</h4><ul><li>'+_z[3]+'</li><li>当日温度落此区：'+_z[4]+'</li></ul><div class="ck">这是你的 01 情绪门控理论的落地细化；真实判法见"测温口径"。</div>';}
+function ZZT(){var r='';for(var i=0;i<ZONE.length;i++){var z=ZONE[i];r+='<tr><td>&lt;'+z[0]+'</td><td style="color:'+z[2]+'">'+z[1]+'</td><td>'+z[3].split(' → ')[1]+'</td></tr>';}return r}
+function LAD(){var r='';for(var i=0;i<TODAY.ladder.length;i++){var q=TODAY.ladder[i];r+='<tr><td>'+q[0]+'</td><td>'+q[1]+'</td></tr>';}return r}
+function WATCH(){var r='';for(var i=0;i<TODAY.watch.length;i++)r+='<li>'+TODAY.watch[i]+'</li>';return r}
+
+var sh=document.getElementById('sheet'),mask=document.getElementById('mask');
+var sbT=document.getElementById('st'),sbP=document.getElementById('sp'),sbB=document.getElementById('sb');
+function ttl(k){return {about:'关于 · 测温口径',history:'温度从哪来 · 近30日',temp:'今日情绪温度拆解',zt:'涨停与炸板 · 量质结构',xy:'赚钱效应 · 明细',lb:'连板梯队 · 高度人气',gate:'情绪闸门 · 说明',tomorrow:'明日怎么看 · 观察点',sim:'模拟不同温度','mom':'情绪动量理论 · 副盘/口诀/速查',loop:'情绪闭环 · 四力系统',words:'名词课堂'}[k]||'详情'}
+for(var i=0;i<ZONE.length;i++){}
+var MT={zt:TODAY.zt+'家 · 炸板'+TODAY.zr+'%',xy:fmt(TODAY.xy)+' · 昨板'+TODAY.xs+'%收涨',lb:TODAY.lb+'板',temp:TODAY.temp+'° · '+zz(TODAY.temp)[1],mom:TODAY.em||'均衡 ×0.8',loop:'闭环四力 · 今日走到①门',tomorrow:'基于 09-08 数据',sim:'0-100 教学演示',history:TODAY.date};
+/* ---- 近30日走势数据 + 折线图 ---- */
+var TR=[];             /* [{date:'MM/DD'|'MMDD',temp:num}] 按时间升序; 逐日积累 */
+var REG={GUIDE:[[8,28,21,'谷·08/28'],[9,3,86,'峰·09/03']],  // 30日基准参照(真实), 画虚线参考
+         note:'实点为自积累逐日温度；早段两根虚线为近30日真实谷/峰参照线'};
+function setTrend(ar){ /* ar:[{date:'20260907',temp:42}...] */
+  TR=[]; if(!ar||!ar.length) return;
+  ar=ar.slice().sort(function(a,b){return a.date<b.date?-1:1});
+  for(var i=0;i<ar.length;i++){var d=String(ar[i].date);var t=+ar[i].temp;if(!isFinite(t))continue;
+    var md=d.length===8?d.slice(4,6)+'/'+d.slice(6):d; TR.push({d:md,t:t});} }
+setTrend((window.__HIST||[{date:'20260907',temp:42},{date:'20260908',temp:58}]));
+function renderTrend(){
+  var cv=document.getElementById('tc'); if(!cv) return; if(!TR.length) return;
+  var c2=cv.getContext('2d'),w=cv.width,h=cv.height,mL=26,mR=14,mT=14,mB=24;
+  c2.clearRect(0,0,w,h);
+  /* 可显示的全部温度点 = 自积累真实序列(已含 08/28谷·09/03峰 等真实登记日) */
+  var pts=[]; var seen={};
+  for(var i=0;i<TR.length;i++){var dm=TR[i].d.split('/');var dt=+dm[0]*100+(+dm[1]);if(!seen[dt]){seen[dt]=1;pts.push({x:dt,y:TR[i].t,ref:0,lbl:''+dm[0]+'/'+dm[1],today:i===TR.length-1});}}
+  pts.sort(function(a,b){return a.x-b.x;});
+  /* x 轴按“交易日序号”等距排，不按日历日拉宽——跳过周末/节假日不留空档(不跨交易日) */
+  var N=pts.length,n0=N>1?N-1:1,lo=0,hi=100;
+  function px(i){return mL+(w-mL-mR)*(i/n0);}      /* i=交易日序号 0..N-1 */
+  function py(y){return mT+(h-mT-mB)*(1-y/hi);}   /* 0楼→100顶 */
+  /* 背景六区横带 */
+  var ZB=[[20,'rgba(90,168,230,.16)'],[40,'rgba(67,201,176,.16)'],[55,'rgba(143,211,107,.16)'],[70,'rgba(255,205,90,.16)'],[85,'rgba(255,154,60,.18)'],[100,'rgba(255,82,82,.20)']];
+  var py0=h-mB;
+  for(var b=0;b<ZB.length;b++){var zt=ZB[b][0],prev=b?ZB[b-1][0]:0;
+    var y0=h-mB-(h-mT-mB)*(zt/100), y1=h-mB-(h-mT-mB)*(prev/100);
+    c2.fillStyle=ZB[b][1];c2.fillRect(mL,y0,w-mL-mR,y1-y0);}
+  /* y 刻度 0/50/100 */
+  c2.font='9px "Microsoft YaHei"';c2.fillStyle='rgba(159,182,210,.7)';c2.textAlign='right';
+  c2.strokeStyle='rgba(125,185,255,.14)';
+  [0,25,50,75,100].forEach(function(v){var y=py(v);c2.beginPath();c2.moveTo(mL,y);c2.lineTo(w-mR,y);c2.stroke();c2.fillText(''+v,mL-4,y+3);});
+  /* 谷/峰参考横虚线(21 与 86) + 标签 */
+  function refLine(v,lbl,col){var y=py(v);c2.strokeStyle=col;c2.setLineDash([4,4]);c2.beginPath();c2.moveTo(mL,y);c2.lineTo(w-mR,y);c2.stroke();c2.setLineDash([]);c2.fillStyle=col;c2.textAlign='left';c2.font='bold 9px "Microsoft YaHei"';c2.fillText(lbl,mL+3,y-3);}
+  refLine(21,'谷·21','#43c9b0'); refLine(86,'峰·86','#ff9a3c');
+  /* 折线：按交易日序号连接真实闭市温度(不跨交易日, 相邻交易日等距) */
+  if(pts.length>1){
+    c2.lineJoin='round';c2.strokeStyle='#ffd76a';c2.lineWidth=2.4;
+    c2.beginPath();
+    for(var r=0;r<pts.length;r++){var X=px(r),Y=py(pts[r].y);if(r===0)c2.moveTo(X,Y);else c2.lineTo(X,Y);}
+    c2.stroke();
+    /* 面积渐变 */
+    var gd=c2.createLinearGradient(0,py0,0,py(0));gd.addColorStop(0,'rgba(255,215,106,.02)');gd.addColorStop(1,'rgba(255,215,106,.16)');
+    c2.lineTo(px(pts.length-1),py0);c2.lineTo(px(0),py0);c2.closePath();c2.fillStyle=gd;c2.fill();
+  }
+  /* 交易日点：金实心；末点为“今日”加大强调 */
+  for(var p=0;p<pts.length;p++){var q=pts[p],X=px(p),Y=py(q.y),isLast=(p===pts.length-1);
+    c2.beginPath();c2.arc(X,Y,isLast?6.5:5.5,0,7);
+    c2.fillStyle='#ffd76a';c2.fill();
+    c2.strokeStyle=isLast?'#ff5252':'#0b1d34';c2.lineWidth=isLast?3:2;c2.stroke();
+    c2.fillStyle='#fff';c2.font='9px "Microsoft YaHei"';c2.textAlign='center';
+    if(pts.length<=16){c2.save();c2.translate(X,Y-13);c2.fillText(q.lbl,0,0);c2.restore();} }
+  /* x 轴日期提示 */
+  c2.fillStyle='rgba(159,182,210,.45)';c2.font='9px "Microsoft YaHei"';c2.textAlign='center';
+  var lk=pts[pts.length-1]; if(lk){c2.fillText('今日 '+lk.lbl,px(pts.length-1),h-6);}
+  c2.fillText('近30日 · 按交易日等距(不跨周末/节假日)',mL+(w-mL-mR)/2,h-6);
+}
+var MOM=[{n:"防守",co:0.5,c:"#3fa7e0",lab:"降力防守 / 空仓观望",act:"动量转弱、续力不足 → 收缩试错，防守为主，别逆势接",
+ full:["动量落入下落或不济区：赚钱效应续力弱、接力易断 → 防守=收仓位、少出手，等下一波回暖信号。","03《能量动量》回测：防守日集中到前 2 高优先级信号、避开边缘票，是动量策略最主要的保护机制。"]},
+{n:"均衡",co:0.8,c:"#ffd76a",lab:"中性震荡 / 半仓试探",act:"动量无明确方向、横着走 → 不空不满，半仓试探，看盘中能否走出方向",
+ full:["动量中性（震荡）：effect 涨跌反复、方向未明 → 均衡半仓，跟随但不重仓，等加速/减速给第二信号。","03《能量动量》：中性态最忌满仓赌方向；软性仓位(×0.8)既保留最优信号又不暴露。"]},
+{n:"进攻",co:1.0,c:"#ff6b4a",lab:"加速上行 / 参与且控回撤",act:"动量向上加速、续力强 → 可参与，但高位防诱多，冲高无量即兑现",
+ full:["动量向上加速/减速上涨都在进攻区 → 可积极参与，但别在过热/高开诱多处接最后一棒。","03《能量动量》反转规律：上涨加速次日常回落 → 进攻≠追高，控回撤与参与并行。"]}];
+function cf(v){return (Math.round((v||0)*10)/10).toFixed(1)}
+function parMom(s){s=String(s||"均衡 ×0.8");var m=/\s*(进攻|均衡|防守)\s*[×xX*]?\s*([0-9.]+)?/.exec(s)||[];var co=parseFloat(m[2]);if(!isFinite(co))co=NaN;var name=m[1]||"均衡";var i;for(i=0;i<MOM.length;i++){if(MOM[i].n===name)break;}if(i===MOM.length){i=1;}if(!isFinite(co)){co=MOM[i].co;}return{n:MOM[i].n,co:co,i:i,c:MOM[i].c,raw:s};}
+function momSheet(){var q=parMom(TODAY.em),z=MOM[q.i];
+ return '<h4>情绪动量理论 · 今日 '+q.n+' ×'+cf(q.co)+'</h4><p>动量 ≠ 温度：温度告诉你<b class="gd">现在什么气温</b>（赚钱效应），动量告诉你<b class="gd">这股力朝哪推、该上多少力</b>（由赚钱效应的<b>速度/加速度</b>推出）。两者配合——温度对则方向对，动量对则力度对。</p>'
+ +'<div class="big3"><div class="b3"><div class="n" style="color:'+q.c+'">'+q.n+'</div><div class="l2">动量档</div></div><div class="b3"><div class="n" style="color:'+q.c+'">×'+cf(q.co)+'</div><div class="l2">仓位系数</div></div><div class="b3"><div class="n">'+zz(TODAY.temp)[1]+'</div><div class="l2">温度(方向)</div></div></div>'
+ +'<h4>今日读法（'+q.lab.split("/")[0]+'）</h4><p>温度 '+TODAY.temp+'°('+zz(TODAY.temp)[1]+') ＋ 动量 '+q.n+' ×'+q.co+' → '+z.act+'。</p>'
+ +'<h4>三档速查（03《能量动量》em 量纲）</h4><table><tr><th>动量档</th><th>系数</th><th>力度 / 动作</th></tr>'
+ + MOM.map(function(m){var mk=(m.n===q.n)?' style="color:'+m.c+';font-weight:900"':'';return '<tr><td'+mk+'>'+m.n+(m.n===q.n?' ◀ 今日':'')+'</td><td'+mk+'>×'+cf(m.co)+'</td><td>'+m.lab+'</td></tr>';}).join('')
+ +'</table><h4>怎么算（纯客观，忠于理论）</h4><ul><li>从<b>赚钱效应 effect</b> 取速度（一阶差分）与加速度（二阶差分），推出动量方向。</li><li>加速上涨 / 减速上涨 → <b>进攻 ×1.0</b>；中性震荡 → <b>均衡 ×0.8</b>；加速下跌 / 减速下跌 → <b>防守 ×0.5</b>。</li><li>动量档是仓位“系数”，与温度（方向/门槛）配合使用，不相互替代。</li></ul>'
+ +'<h4>一句话提示（引用 03 册）</h4>'+z.full.join('<br>')+'<div class="ck">动量=收盘对赚钱效应趋势的客观描述，非荐股、非买卖指令；与温度同源、可审计。</div>';
+}
+function drawMom(){var el=document.getElementById('momV');if(!el)return;var box=document.querySelector('.momentum');if(box){box.style.display='';}
+ var q=parMom(TODAY.em),z=MOM[q.i];
+ el.textContent=q.n+'  ×'+cf(q.co);el.style.color=q.c;
+ var a=document.getElementById('momA');if(a){a.textContent=z.act;}
+ var cv=document.getElementById('mc'),ax=cv.getContext('2d'),cw=cv.width,ch=cv.height,R=ch*0.55,CX=cw/2,CY=ch*0.44;
+ ax.clearRect(0,0,cw,ch);
+ function sc(c){return Math.PI*(1-(c-0.5)/0.5);} /* 0.5->left(pi)  1.0->right(0), upper half */
+ /* colored guide arc: 防守->均衡->进攻 segmented at radius R */
+ for(var i=0;i<MOM.length;i++){var m=MOM[i];var a0=sc(MOM[i-1]?MOM[i-1].co:0.5),a1=sc(m.co);ax.lineWidth=7;ax.lineCap='round';ax.strokeStyle=m.c;ax.globalAlpha=.42;ax.beginPath();ax.arc(CX,CY,R,-a0,-a1,true);ax.stroke();}
+ ax.globalAlpha=1;
+ /* stage dots + bottom labels */
+ for(var j=0;j<MOM.length;j++){var m2=MOM[j];var ang=sc(m2.co),tx=CX+R*Math.cos(ang),ty=CY-R*Math.sin(ang);ax.beginPath();ax.arc(tx,ty,2.6,0,7);ax.fillStyle=(j===q.i)?m2.c:'rgba(200,220,240,.55)';ax.fill();}
+ ax.fillStyle='rgba(159,182,210,.6)';ax.font='8.5px "Microsoft YaHei"';ax.textAlign='center';
+ ax.fillText('防守',0,ch-1);ax.fillText('进攻',cw,ch-1);ax.fillText('均衡',cw/2,CY+R+11);
+ /* needle to today */
+ var qa=sc(q.co),nx=CX+R*Math.cos(qa),ny=CY-R*Math.sin(qa);
+ ax.lineWidth=2;ax.strokeStyle='#fff';ax.beginPath();ax.moveTo(CX,CY);ax.lineTo(nx,ny);ax.stroke();
+ ax.fillStyle=q.c;ax.beginPath();ax.arc(CX,CY,2.6,0,7);ax.fill();
+ ax.strokeStyle=q.c;ax.lineWidth=2;ax.beginPath();ax.arc(nx,ny,4.8,0,7);ax.stroke();
+ /* C strip chips */
+ var s2=document.getElementById('momS');
+ if(s2){s2.innerHTML=MOM.map(function(m){return '<div class="momchip'+(m.n===q.n?' cur':'')+'"><b style="color:'+m.c+'">'+m.n+' ×'+cf(m.co)+'</b><small>'+m.lab.split('/')[0]+'</small></div>';}).join('');}
+ S['mom']=momSheet();
+}
+
+
+/* ============ 闭环系统理论(LOOP) ============ */
+var LOOP=[{a:'① 门',b:'',c:'温度·赚钱效应',live:1,key:'temp'},
+ {a:'② 力',b:'',c:'动量·力度',live:1,key:'mom'},
+ {a:'③ 票',b:'',c:'梯队·选股',live:1,key:'lb'},
+ {a:'④ 守',b:'',c:'卖出纪律',live:0,key:'sell'}];
+function buildLoop(){
+  var ps=[];
+  LOOP[0].b=TODAY.temp+'°'; LOOP[0].c='温度·赚钱效应';
+  var mq=parMom(TODAY.em); LOOP[1].b=mq.n+'×'+cf(mq.co); LOOP[1].c='动量·力度';
+  LOOP[2].b=TODAY.lb+'板'; LOOP[2].c='梯队·高度';
+  LOOP[3].b='纪律'; LOOP[3].c='理论档·待数据';
+  var html=LOOP.map(function(x,i){
+    var cls=' ln'+(x.live?'':' th');
+    var extra=(i===3)?' style="border-style:dashed;border-color:rgba(255,215,106,.4)"':'';
+    return '<div class="'+cls.trim()+'"'+extra+'><div class="a">'+x.a+'</div><div class="b">'+x.b+'</div><div class="c">'+x.c+'</div></div>';
+  }).join('');
+  var el=document.getElementById('loopRing'); if(el) el.innerHTML=html;
+}
+S['loop']=(function(){
+  var z=zz(TODAY.temp), mq=parMom(TODAY.em), M4=['蓄力(缩量整理·等风口)','释放(放量加速·主升段)','衰竭(滞涨背离·最早见顶)','出货(冲高无量·高开低走)'];
+  return '<h4>为什么是闭环 · 一套引擎</h4>'
+  +'<p>打板/连板接力本质是<b class="hi">负期望游戏</b>——真正的收益引擎不在"买哪只"，而在<b class="gd">何时买、买多重、何时走</b>。四力闭环按序运转、环环校验：</p>'
+  +'<table><tr><th>环节</th><th>问什么</th><th>今日读数</th></tr>'
+  +'<tr><td><b>① 门·温度</b>(01情绪门控)</td><td>赚钱效应是不是正→<b class="gd">什么气温</b></td><td>'+TODAY.temp+'° · '+z[1]+'</td></tr>'
+  +'<tr><td><b>② 力·动量</b>(03能量动量)</td><td>这股力朝哪推→<b class="gd">上多少力</b></td><td>'+mq.n+' ×'+cf(mq.co)+'</td></tr>'
+  +'<tr><td><b>③ 票·梯队</b>(02龙头选股)</td><td>谁在往上走→<b class="gd">买什么</b></td><td>'+TODAY.lb+'板 · 看梯队</td></tr>'
+  +'<tr><td><b>④ 守·卖出</b>(04卖出风控)</td><td>何时带走利润→<b class="gd">何时走</b></td><td class="gd">理论档 · 待数据</td></tr></table>'
+  +'<h4>能量四态（03册 · 动量微观结构）</h4>'
+  +'<ul>'+M4.map(function(m,i){return '<li><b>'+m.split('(')[0]+'</b>&nbsp;'+m.split('(')[1].replace(')','')+(i===2?'&nbsp;<span class="gd">(衰竭最早见顶)</span>':'')+'</li>';}).join('')+'</ul>'
+  +'<p>上涨加速→次日多回落、下跌加速→次日多反弹——<b class="hot">动量反转规律</b>与"追涨"直觉相反，故进攻≠追高：加速期的"释放/衰竭"要先读懂再决定出手力度。</p>'
+  +'<h4>第④守 · 卖出纪律（04册摘要）</h4>'
+  +'<ul><li>分档止盈：强势 <b class="gd">+10~15%</b> 主动减、让利润奔跑留底仓；弱势反弹即走。</li>'
+  +'<li>硬止损 <b class="hi">-5%</b>（或破关键位）无条件纪律离场，防未来自我说服。</li>'
+  +'<li>闸门次日循环：用 <b>T日收盘结算的赚钱效应当 T+1 的闸</b>，T+1 开盘按闸出手——情绪是总闸非叠加因子。</li>'
+  +'<li>三铁律：不用未来函数；情绪是总闸不是叠加因子；相对比较才置信。</li></ul>'
+  +'<h4>今日闭环走位</h4>'
+  +'<p>温度 '+TODAY.temp+'°('+z[1]+') → 闸门'+TODAY.gateTxt+' → 动量 '+mq.n+' ×'+mq.co+' → 梯队 '+TODAY.lb+'板。前③环都有今日客观读数；第④守(卖出纪律)与能量四态需逐日数据管线支撑，当前以理论档呈现，<b>不为凑闭环而编今日值</b>。</p>'
+  +'<div class="ck">闭环=把"什么气温/上多少力/买什么/何时走"串成可执行链条的系统方法；本页仅状态与理论呈现，不荐股、不构成买卖指令。</div>';
+})();
+buildLoop();
+
+function open(k){ttl(k);sbT.textContent=k.indexOf('zone')==0?(ZONE[+k.slice(4)][1]+'区详解'):ttl(k);sbP.textContent='今日 · '+(((k in MT)?MT[k]:TODAY.date));sbB.innerHTML=S[k]||'';sh.classList.add('open');mask.classList.add('show');if(k==='history'){setTimeout(function(){renderTrend();},30);}}
+function close(){sh.classList.remove('open');mask.classList.remove('show')}
+document.getElementById('sx').onclick=close;mask.onclick=close;
+document.body.addEventListener('click',function(e){var t=e.target;if(t.closest&&t.closest('[data-k]')&&!t.closest('input')){open(t.closest('[data-k]').getAttribute('data-k'))}});
+draw(TODAY.temp);
+
+})();
+</script>
+</body>
+</html>
