@@ -203,7 +203,24 @@ function applyApp(d){
   if(ef.up_pct!=null)TODAY.xs=ef.up_pct;
   if(cd.top!=null){var m=/^(\d+)\s*板/.exec(String(cd.top));if(m)TODAY.lb=+m[1];}
   if(cd.top_note)TODAY.lbNote=cd.top_note;
+
   if(tp.em)TODAY.em=tp.em;
+  /* B2::派生 */
+  TODAY.sig=(tp.desc!=null)?String(tp.desc):(TODAY.sig||'');
+  TODAY.lb=TODAY.lb||0;
+  if(ef.n!=null)TODAY.xtz=ef.n;
+  if(ef.n_rezt!=null)TODAY.xz=ef.n_rezt;
+  if(ef.n_up!=null)TODAY.xup=ef.n_up;
+  if(cd.top_note)TODAY.lbNote=String(cd.top_note);
+  if(cd.zb_note)TODAY.zbNote=String(cd.zb_note);
+  if(!TODAY.gateTxt||TODAY.gateTxt===TODAY._g0)TODAY.gateTxt=(tp.gate!=null)?String(tp.gate):TODAY.gateTxt;
+  TODAY._g0=TODAY.gateTxt;
+  TODAY.ladder=[];var _grp={};TODAY.nLb=0;
+  if(d.ladder&&d.ladder.length){d.ladder.forEach(function(q){var gp=String(q.r).replace(/[^0-9.]/g,'')+'板';if(!_grp[gp])_grp[gp]=[];_grp[gp].push(q.n);});}
+  Object.keys(_grp).forEach(function(gp){TODAY.ladder.push([gp,_grp[gp].join(' · ')]);TODAY.nLb+=_grp[gp].length;});
+  TODAY.ladder.sort(function(a,b){return(parseInt(b[0])||99)-(parseInt(a[0])||99);});
+  var _zt=+TODAY.zt||0;TODAY.nSz=Math.max(0,_zt-TODAY.nLb);
+
   /* 明日倾向串: 用闸门分类 */
   var cls=String(tp.cls||'warm');
   if(co.concl)TODAY.want=co.concl;
@@ -217,7 +234,7 @@ fetch('mood_history.json',{cache:'no-store'}).then(function(r){return r.ok?r.jso
 function sync(){buildAll(TODAY);}
 var S={
 about:'<h4>这是什么</h4>每天收盘后，把全市场短线情绪量化成一格 <b class="hot">0-100 的情绪温度</b>，配赚钱效应 / 涨停 / 连板三个数，看懂今天热在哪、要不要参与。<h4>为什么叫温度，不是涨幅</h4>温度度量的是 <b class="hot">赚钱效应</b>——昨天涨停的票今天还能不能带走利润。它比单纯涨停家数更能说明情绪有没有续力。<h4>判据口径（忠于 01《情绪门控》理论）</h4><table><tr><th>赚钱效应</th><th>温度</th><th>情绪</th></tr><tr><td>&gt;6%</td><td>88</td><td class="gd">亢奋</td></tr><tr><td>4–6%</td><td>76</td><td class="gd">亢奋</td></tr><tr><td>2–4%</td><td>58</td><td class="gd">回暖</td></tr><tr><td>0–2%</td><td>42</td><td>偏冷</td></tr><tr><td>≤0%</td><td>22</td><td>冷清</td></tr></table><div class="ck">温度只依赚钱效应，单源可审计。本页再把 0-100 细分成 6 个情绪区，落哪区显示哪种颜色与档名。</div>',
-history:'<h4>近30日情绪走势 · 每日收盘自动生成</h4><div class="trwrap"><canvas id="tc" width="380" height="196"></canvas><div class="tagn"><b class="hot">今日 · <span id='hisT'></span></b>&nbsp; 谷21(08/28)&nbsp; 峰86(09/03)</div></div><p>把每天的温度连成线，看今天处在情绪周期的<b class="hot">冷却段</b>还是<b class="gd">回暖段</b>——自低谷向上修复=参与窗口打开；自高位向下=防退潮、降仓位。</p><h4>读图</h4><ul><li><b>线往上走 + 温度进 55-70 回暖区</b>：赚钱效应接续转好，可小仓试探。</li><li><b>线冲高到 85+ 过热区</b>：不是加仓信号，是「只卖不追、控回撤」提示。</li><li><b>线趴在 40 以下</b>：多数时间收手等回暖，别接飞刀。</li></ul><h4>数据自积累</h4><p>每交易日收盘后自动把当日温度滚进序列，走势图随天数变完整；早期以少数实点起步，不造假补齐。</p><div class="ck">历史温度=每日收盘客观统计，图随积累变长，非预测线。</div>',
+history:'<h4>近30日情绪走势 · 每日收盘自动生成</h4><div class="trwrap"><canvas id="tc" width="380" height="196"></canvas><div class="tagn"><b class="hot">今日 · <span id="hisT"></span></b>&nbsp; 谷21(08/28)&nbsp; 峰86(09/03)</div></div><p>把每天的温度连成线，看今天处在情绪周期的<b class="hot">冷却段</b>还是<b class="gd">回暖段</b>——自低谷向上修复=参与窗口打开；自高位向下=防退潮、降仓位。</p><h4>读图</h4><ul><li><b>线往上走 + 温度进 55-70 回暖区</b>：赚钱效应接续转好，可小仓试探。</li><li><b>线冲高到 85+ 过热区</b>：不是加仓信号，是「只卖不追、控回撤」提示。</li><li><b>线趴在 40 以下</b>：多数时间收手等回暖，别接飞刀。</li></ul><h4>数据自积累</h4><p>每交易日收盘后自动把当日温度滚进序列，走势图随天数变完整；早期以少数实点起步，不造假补齐。</p><div class="ck">历史温度=每日收盘客观统计，图随积累变长，非预测线。</div>',
 temp:'<h4>今日 58° · 落在「回暖」区</h4><div class="big3"><div class="b3"><div class="n" style="color:#ffcd5a">58°</div><div class="l2">今日温度</div></div><div class="b3"><div class="n" style="color:#ffcd5a">回暖</div><div class="l2">情绪区</div></div><div class="b3"><div class="n" style="color:#ffd76a">半开</div><div class="l2">情绪闸</div></div></div><h4>一句话解读</h4>'+TODAY.sig+'。<h4>六档情绪界</h4><table><tr><th>温度</th><th>档位</th><th>操作语</th></tr>'+ZZT()+'</table><h4>为什么今日判「'+zz(TODAY.temp)[1]+'」</h4>赚钱效应为正说明情绪没死，但温度未到 70+ 强区、炸板率又偏高 → <b>'+TODAY.want+'</b>，非反转确认。<div class="ck">此页为市场状态描述，非买卖指令。</div>',
 zt:'<h4>涨停 73 家 vs 炸板 37 家</h4><div class="big3"><div class="b3"><div class="n" style="color:#ff5252">73</div><div class="l2">涨停家数</div></div><div class="b3"><div class="n" style="color:#ffd76a">33.6%</div><div class="l2">炸板率(偏高)</div></div><div class="b3"><div class="n">36</div><div class="l2">首板家数</div></div></div><h4>读法：量 vs 质</h4>涨停 <b class="hi">73 家不算少</b>，但炸板率 <b class="gd">33.6%</b> 是近日(≈17%)的近两倍——封上去又开板的变多 = 分歧加大、封板质量下降：量升、质降。<h4>结构拆解</h4><table><tr><th>板位</th><th>个股</th></tr>'+LAD()+'</table><div class="ck">炸板率高是情绪转弱的前兆信号；重点盯能否回落到 20% 以下。</div>',
 xy:'<h4>赚钱效应 +3.0%</h4><div class="big3"><div class="b3"><div class="n" style="color:#ff5252">+3.0%</div><div class="l2">效应强度</div></div><div class="b3"><div class="n" style="color:#ff5252">65%</div><div class="l2">昨涨停今收涨</div></div><div class="b3"><div class="n" style="color:#ffd76a">19家</div><div class="l2">再涨停(续力)</div></div></div><h4>怎么算（理论核心）</h4>统计<b>昨日涨停股</b>今日加权表现（收涨占比＋续板）。<b>赚钱效应 &gt; 0 是情绪闸能否打开的第一前提</b>——涨停家数再多，若效应为负（隔日全埋）＝只是虚火。<h4>今日读数</h4>效应 <b>+3.0%</b>、昨日涨停中 <b>65% 今日收涨</b>、<b>19 家再度涨停</b>（有续力）——这是判「回暖 · 可试探」而非「关闸空仓」的根因。<div class="ck">纯统计描述，不构成投资建议。</div>',
@@ -229,7 +246,88 @@ words:'<h4>名词课堂 · 一句人话</h4><table><tr><th>名词</th><th>释义
 };
 for(var i=0;i<ZONE.length;i++){var _z=ZONE[i];S['zone'+i]='<h4 style="color:'+_z[2]+'">'+_z[1]+'区（≤'+_z[0]+'°）</h4><p>'+_z[4]+'</p><h4>操作语</h4><ul><li>'+_z[3]+'</li><li>当日温度落此区：'+_z[4]+'</li></ul><div class="ck">这是你的 01 情绪门控理论的落地细化；真实判法见"测温口径"。</div>';}
 function ZZT(){var r='';for(var i=0;i<ZONE.length;i++){var z=ZONE[i];r+='<tr><td>&lt;'+z[0]+'</td><td style="color:'+z[2]+'">'+z[1]+'</td><td>'+z[3].split(' → ')[1]+'</td></tr>';}return r}
-function LAD(){var r='';for(var i=0;i<TODAY.ladder.length;i++){var q=TODAY.ladder[i];r+='<tr><td>'+q[0]+'</td><td>'+q[1]+'</td></tr>';}return r}
+function livePanel(k){
+  var z=zz(TODAY.temp);var zc=z[2];
+  var gt=String(TODAY.gateTxt||'半开 · 可试探');
+  var gOpen=gt.indexOf('开闸')===0,gEmpty=gt.indexOf('空仓')===0;
+  var gs=gOpen?('开闸 · '+(gEmpty?'观望':'可参与')):(gEmpty?'空仓 · 观望/防守':'半开 · 试探');
+  var want=TODAY.want||'以明日收盘新数据为准';
+  var sig=TODAY.sig||('温度 '+TODAY.temp+'°，昨涨停今均 '+fmt(TODAY.xy)+'%，'+TODAY.xs+'% 收涨');
+  var avg=fmt(TODAY.xy), xs=TODAY.xs, xz=(TODAY.xz!=null)?TODAY.xz:'--', xtz=(TODAY.xtz!=null)?TODAY.xtz:'--';
+  if(k==='temp'){
+    return '<h4>今日 '+TODAY.temp+'° · 落在「'+z[1]+'」区</h4><div class="big3">'
+     +'<div class="b3"><div class="n" style="color:'+zc+'">'+TODAY.temp+'°</div><div class="l2">今日温度</div></div>'
+     +'<div class="b3"><div class="n" style="color:'+zc+'">'+z[1]+'</div><div class="l2">情绪区</div></div>'
+     +'<div class="b3"><div class="n" style="color:#ffd76a">'+(gEmpty?'空仓':gs)+'</div><div class="l2">情绪闸</div></div></div>'
+     +'<h4>一句话解读</h4>'+sig+'。<h4>六档情绪界</h4><table><tr><th>温度</th><th>档位</th><th>操作语</th></tr>'+ZZT()+'</table>'
+     +'<h4>为什么今日判「'+z[1]+'」</h4><p>'+(avg>0?'赚钱效应为正说明情绪未死，但温度未到 70+ 强区、炸板率又偏高 → <b>'+want+'</b>，非反转确认。':'赚钱效应转弱，接力风险大，温度落低温区 → <b>'+want+'</b>，守住等回暖。')+'</p><div class="ck">此页为市场状态描述，非买卖指令。</div>';
+  }
+  if(k==='zt'){
+    var zp=String(TODAY.zr).replace('%','');var zn=(+zp>=30)?'偏高':((+zp>=20)?'中性':'健康');
+    return '<h4>涨停 '+TODAY.zt+' 家 · 炸板率 '+zp+'%</h4><div class="big3">'
+     +'<div class="b3"><div class="n" style="color:#ff5252">'+TODAY.zt+'</div><div class="l2">涨停家数</div></div>'
+     +'<div class="b3"><div class="n" style="color:#ffd76a">'+zp+'%</div><div class="l2">炸板率('+zn+')</div></div>'
+     +'<div class="b3"><div class="n">'+((TODAY.nSz!=null)?TODAY.nSz:'--')+'</div><div class="l2">首板家数</div></div></div>'
+     +'<h4>读法：量 vs 质</h4><p>涨停 <b class="hi">'+TODAY.zt+' 家</b>'+(+zp>=30?('，但炸板率 <b class="gd">'+zp+'%</b> 偏高——封上去又开板的变多 = 分歧加大、封板质量下降：量升、质降。'):('，炸板率 <b class="gd">'+zp+'%</b> 处于'+zn+'，封板质量尚可。'))+'</p>'
+     +'<h4>结构拆解</h4><table><tr><th>板位</th><th>个股</th></tr>'+LAD()+'</table>'
+     +'<div class="ck">炸板率高是情绪转弱的前兆信号；重点盯能否回落。</div>';
+  }
+  if(k==='xy'){
+    var c0=(avg>=0)?'#ff5252':'#5aa8e6';
+    return '<h4>赚钱效应 '+avg+'</h4><div class="big3">'
+     +'<div class="b3"><div class="n" style="color:'+c0+'">'+avg+'</div><div class="l2">效应强度</div></div>'
+     +'<div class="b3"><div class="n" style="color:#ff5252">'+xs+'%</div><div class="l2">昨涨停今收涨</div></div>'
+     +'<div class="b3"><div class="n" style="color:#ffd76a">'+xz+'</div><div class="l2">回封(续力)</div></div></div>'
+     +'<h4>怎么算（理论核心）</h4><p>统计<b>昨日涨停股</b>今日加权表现（收涨占比＋续板）。<b>赚钱效应 &gt; 0 是情绪闸能否打开的第一前提</b>——涨停家数再多，若效应为负＝只是虚火。</p>'
+     +'<h4>今日读数</h4>昨日涨停 <b>'+xtz+' 家</b>，今日 <b>'+xs+'% 收涨</b>、<b>'+xz+' 家回封续力</b>，效应 <b>'+avg+'</b>——这是判'+(gEmpty?'「'+z[1]+' · 观望」':'「'+z[1]+' · 试探」')+'的根因。<div class="ck">纯统计描述，不构成投资建议。</div>';
+  }
+  if(k==='lb'){
+    return '<h4>最高连板 = '+TODAY.lb+' 板</h4><div class="big3">'
+     +'<div class="b3"><div class="n" style="color:#ffd76a">'+TODAY.lb+'板</div><div class="l2">今日高度</div></div>'
+     +'<div class="b3"><div class="n">'+((TODAY.nLb!=null)?TODAY.nLb:'--')+'</div><div class="l2">连板家数</div></div></div>'
+     +'<h4>梯队（谁在往上走）</h4><table><tr><th>板位</th><th>个股</th></tr>'+LAD()+'</table>'
+     +(TODAY.lbNote?('<h4>高度说明</h4><p>最高 '+TODAY.lb+' 板：'+TODAY.lbNote+'。连板高度=资金愿不愿接力；'+TODAY.lb+' 板不高不低，看能否再上台阶定方向。</p>'):'<h4>怎么解读高度</h4><p>连板高度 = 资金愿不愿接力，'+TODAY.lb+' 板，高度不足期最忌追缩量末日板。</p>')
+     +'<div class="ck">高度不足期最忌追缩量末日板，看高度龙头能否走出一只定方向的板。</div>';
+  }
+  if(k==='gate'){
+    return '<h4>情绪闸门：'+gs+'（'+z[1]+'档）</h4><p>温度给"挡位"，但<b>要不要放大仓</b>要再过一道「情绪闸门」——用赚钱效应＋温度共同决定，避免虚火期满仓。</p>'
+     +'<h4>闸门档位速查</h4><table><tr><th>赚钱效应</th><th>动作</th></tr>'
+     +'<tr><td>&lt;0%</td><td class="hi">关闸 · 空仓 / 防守</td></tr><tr><td>0–4%</td><td class="gd">半开 → 试探</td></tr><tr><td>4–7%</td><td class="gd">开闸 · 可参与</td></tr><tr><td>&gt;7%</td><td class="hot">开闸 · 防退潮 · 控回撤</td></tr></table>'
+     +'<h4>今日：'+gs+'</h4>'+sig+(TODAY.em?('（防守系数 '+TODAY.em+'）'):'')+'。<div class="ck">闸门是纪律工具不是预测工具，空仓 / 满仓都看它，不凭感觉上头。</div>';
+  }
+  if(k==='mom'){
+    var _mq=(typeof parMom==='function')?parMom(TODAY.em):{n:'均衡',co:0.8};
+    var _zn=TODAY.temp!=null?zz(TODAY.temp)[1]:'—';
+    return '<h4>情绪动量理论 · 今日 '+_mq.n+' ×'+cf(_mq.co)+'</h4>'
+    +'<p>动量 ≠ 温度：温度告诉你<b class="gd">现在什么气温</b>（赚钱效应），动量告诉你<b class="gd">这股力朝哪推、该上多少力</b>（由赚钱效应的<b>速度/加速度</b>推出）。两者配合——温度对则方向对，动量对则力度对。</p>'
+    +'<div class="big3"><div class="b3"><div class="n" style="color:'+_mq.c+'">'+_mq.n+'</div><div class="l2">动量档</div></div>'
+    +'<div class="b3"><div class="n" style="color:'+_mq.c+'">×'+cf(_mq.co)+'</div><div class="l2">仓位系数</div></div>'
+    +'<div class="b3"><div class="n">'+_zn+'</div><div class="l2">今日温度</div></div></div>'
+    +'<div class="ck">'+(_mq.n==='防守'?'防守态：情绪偏冷、亏钱效应未散，控制仓位或空仓等待，不逆势加码。':_mq.n==='进攻'?'进攻态：赚钱效应强、情绪在升温，可顺势参与，但仍控回撤。':'均衡态：中性震荡，试探为主、不满仓。')+'</div>';}
+
+  if(k==='loop'){
+    var mq=(typeof parMom==='function')?parMom(TODAY.em):{n:'—',co:0};
+    return '<h4>为什么是闭环 · 一套引擎</h4>'
+    +'<p>打板/连板接力本质是<b class="hi">负期望游戏</b>——真正的收益引擎不在"买哪只"，而在<b class="gd">何时买、买多重、何时走</b>。四力闭环按序运转、环环校验：</p>'
+    +'<table><tr><th>环节</th><th>问什么</th><th>今日读数</th></tr>'
+    +'<tr><td>① 门 · 温度</td><td>赚钱效应是不是正 → 什么气温</td><td class="gd">'+TODAY.temp+'°（'+zz(TODAY.temp)[1]+'）</td></tr>'
+    +'<tr><td>② 力 · 动量</td><td>这股力朝哪推 → 上多少力</td><td>'+mq.n+' ×'+cf(mq.co)+'</td></tr>'
+    +'<tr><td>③ 票 · 梯队</td><td>谁在往上走 → 做哪个</td><td>'+TODAY.lb+'板 · '+(TODAY.lbNote?String(TODAY.lbNote):'见梯队')+'</td></tr>'
+    +'<tr><td>④ 守 · 纪律</td><td>何时走 → 落袋</td><td>理论档 · 待数据</td></tr></table>'
+    +'<div class="ck">闭环=把"什么气温/上多少力/买什么/何时走"串成可执行链条；本页为状态与理论呈现，不荐股、不构成买卖指令。</div>';
+  }
+  if(k==='tomorrow'){
+    var zp2=String(TODAY.zr).replace('%','');
+    return '<h4>一句话倾向：'+want+'</h4><p>基于今日客观统计的状态推演（非预测）：若高开冲高、量跟不上、炸板率再升，谨防退潮式高开低走；若温和承接延续则回稳。</p>'
+     +'<h4>三个观察点（非预测，是看盘钩子）</h4><ul>'
+     +'<li>赚钱效应（今日 '+avg+'）能否守住为正——效应为正情绪才续。</li>'
+     +'<li>高度 '+TODAY.lb+' 板 / 炸板率 '+zp2+'% 的走向——能否再上台阶、炸板是否回落。</li>'
+     +'<li>温度 '+TODAY.temp+'° 是否守住'+(+TODAY.temp<55?'在低温区徘徊，等企稳':'在回升区，看能否放量续温')+'。</li></ul>'
+     +'<div class="ck">基于今日客观统计的状态推演，非买卖建议。</div>';
+  }
+  return S[k];
+}
+function LAD(){if(!TODAY.ladder||!TODAY.ladder.length)return'<tr><td>—</td><td>数据待更新</td></tr>';var r='';for(var i=0;i<TODAY.ladder.length;i++){var q=TODAY.ladder[i];r+='<tr><td>'+q[0]+'</td><td>'+q[1]+'</td></tr>';}return r}
 function WATCH(){var r='';for(var i=0;i<TODAY.watch.length;i++)r+='<li>'+TODAY.watch[i]+'</li>';return r}
 
 var sh=document.getElementById('sheet'),mask=document.getElementById('mask');
@@ -378,7 +476,7 @@ S['loop']=(function(){
 })();
 buildLoop();
 
-function refreshMT(){MT.zt=TODAY.zt+'家 · 炸板'+TODAY.zr+'%';MT.xy=fmt(TODAY.xy)+' · 昨板'+TODAY.xs+'%收涨';MT.lb=TODAY.lb+'板';MT.temp=TODAY.temp+'° · '+zz(TODAY.temp)[1];MT.mom=TODAY.em||'均衡 ×0.8';MT.tomorrow='基于 '+String(TODAY.date).slice(5,10)+' 数据';MT.loop='闭环四力 · 今日走到①门';MT.history=TODAY.date;}function open(k){ttl(k);refreshMT();sbT.textContent=k.indexOf('zone')==0?(ZONE[+k.slice(4)][1]+'区详解'):ttl(k);sbP.textContent='今日 · '+(((k in MT)?MT[k]:TODAY.date));sbB.innerHTML=S[k]||'';sh.classList.add('open');mask.classList.add('show');if(k==='history'){setTimeout(function(){renderTrend();var e=document.getElementById('hisT');if(e&&TODAY.temp!=null&&e.textContent==='')e.textContent=TODAY.temp+'° '+zz(TODAY.temp)[1];},30);}}
+function refreshMT(){MT.zt=TODAY.zt+'家 · 炸板'+TODAY.zr+'%';MT.xy=fmt(TODAY.xy)+' · 昨板'+TODAY.xs+'%收涨';MT.lb=TODAY.lb+'板';MT.temp=TODAY.temp+'° · '+zz(TODAY.temp)[1];MT.mom=TODAY.em||'均衡 ×0.8';MT.tomorrow='基于 '+String(TODAY.date).slice(5,10)+' 数据';MT.loop='闭环四力 · 今日走到①门';MT.history=TODAY.date;}function open(k){if(typeof refreshMT==='function')refreshMT();ttl(k);refreshMT();sbT.textContent=k.indexOf('zone')==0?(ZONE[+k.slice(4)][1]+'区详解'):ttl(k);sbP.textContent='今日 · '+(((k in MT)?MT[k]:TODAY.date));var _dat=k==='temp'||k==='xy'||k==='lb'||k==='zt'||k==='gate'||k==='tomorrow'||k==='mom'||k==='loop';var _hv=(_dat&&typeof livePanel==='function')?livePanel(k):null;sbB.innerHTML=_hv||(S[k]||'');sh.classList.add('open');mask.classList.add('show');if(k==='history'){setTimeout(function(){renderTrend();var e=document.getElementById('hisT');if(e&&TODAY.temp!=null&&e.textContent==='')e.textContent=TODAY.temp+'° '+zz(TODAY.temp)[1];},30);}}
 function close(){sh.classList.remove('open');mask.classList.remove('show')}
 document.getElementById('sx').onclick=close;mask.onclick=close;
 document.body.addEventListener('click',function(e){var t=e.target;if(t.closest&&t.closest('[data-k]')&&!t.closest('input')){open(t.closest('[data-k]').getAttribute('data-k'))}});
